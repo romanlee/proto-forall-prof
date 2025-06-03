@@ -1,0 +1,1 @@
+/opt/cray/pe/craype/2.7.32/bin/CC CMakeFiles/forallTest.dir/forallTest.cpp.o CMakeFiles/forallTest.dir/cmake_device_link.o -o forallTest  -lmpi -lcuda -lnvToolsExt -lcudadevrt -lcudart_static -lrt -lpthread -ldl  -L"/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/cuda/12.4/targets/x86_64-linux/lib/stubs" -L"/opt/nvidia/hpc_sdk/Linux_x86_64/24.5/cuda/12.4/targets/x86_64-linux/lib"
