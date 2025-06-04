@@ -2,11 +2,16 @@
 // #include <gtest/gtest.h>
 #include "Proto.H"
 #include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 using namespace Proto;
 
 #define NUMCOMPS DIM+2
 #define GET_TIMINGS 1
+
 
 PROTO_KERNEL_START
 void f_threshold_temp( Var<short>& a_tags,
@@ -44,10 +49,20 @@ PROTO_KERNEL_END(consToPrim_temp, consToPrim)
 
 int main(){
 
-  // TODO make these hyper params
-  const int nx = 16;
-  const int N_ext = 10; // Set >1 for "light kernel" test, else  set =1
-  const int N_int = 1; // Set >1 for "heavy kernel" test, else set =1
+  // read input params
+  std::ifstream f("input.json");
+  json input = json::parse(f);
+
+  int nx = input["nx"];
+  int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
+  int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
+
+  // printf("nx=%d, N_ext=%d, N_int=%d\n", nx, N_ext, N_int);
+
+  // // TODO make these hyper params
+  // const int nx = 16;
+  // const int N_ext = 10; // Set >1 for "light kernel" test, else  set =1
+  // const int N_int = 1; // Set >1 for "heavy kernel" test, else set =1
 
 #ifdef GET_TIMINGS
   std::filesystem::path currentPath = std::filesystem::current_path();
@@ -121,19 +136,6 @@ int main(){
   // Screws up Nsight systems (except when...the PR_TIMER_SETFILE is in the same dir as the .nsys-rep???)
   PR_TIMER_REPORT();
 #endif
-
-  // Check the reuslts (from ForallTests.cpp)
-  // EXPECT_EQ(U.box(),W.box());
-  // BoxData<double,DIM+2,HOST> U_host(srcBox), W_host(srcBox);
-  // U.copyTo(U_host);
-  // W.copyTo(W_host);
-  // consToPrimCheck(U_host,W_host,gamma,srcBox);
-  // Box destBox = Box::Cube(3);
-  // BoxData<double,DIM+2> W2 = forall<double,DIM+2>(consToPrim,destBox,U,gamma);
-  // EXPECT_EQ(W2.box(),destBox);
-  // BoxData<double,DIM+2,HOST> W2_host(destBox);
-  // W2.copyTo(W2_host);
-  // consToPrimCheck(U_host,W2_host,gamma,destBox);
 
   return 0;
 }

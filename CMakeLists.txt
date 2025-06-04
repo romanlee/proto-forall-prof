@@ -373,12 +373,21 @@ target_link_libraries(Headers_Base INTERFACE nvToolsExt)
 # endif()
 # from proto/roman/CMakeLists.txt
 # ----------------------
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+# target_link_libraries(foo PRIVATE nlohmann_json::nlohmann_json)
+
+
 add_executable(forallTest forallTest.cpp)
 set_source_files_properties(forallTest.cpp PROPERTIES LANGUAGE CUDA)
 
 target_link_libraries(forallTest PRIVATE
     Headers_Base 
     ${LIB_DEP} 
+    nlohmann_json::nlohmann_json
 )
 
 # target_include_directories(forallTest INTERFACE 
