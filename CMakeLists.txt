@@ -1,6 +1,9 @@
 # cmake_minimum_required(VERSION 3.21)  # uses enable_language(HIP)
 cmake_minimum_required(VERSION 3.20)  # uses enable_language(HIP)
 
+project(Proto_forall_prof VERSION 1.0 DESCRIPTION "Proto forall profiling") # LANGUAGES CXX) # HDF5 fails with LANGUAGES argument
+
+
 # function(submodule_error module)
 #     message(FATAL_ERROR "\
 #     The ${module} submodule is not present.\n \
@@ -9,27 +12,20 @@ cmake_minimum_required(VERSION 3.20)  # uses enable_language(HIP)
 #     git submodule update")
 # endfunction()
 
-# if(DEFINED PROTO_LOADED)
-#     return() # Proto has already been loaded by encompassing CMake project
-# endif()
-# # checks if Proto is submodule of larger CMake project but hasn't been loaded yet
-# get_directory_property(hasParent PARENT_DIRECTORY)
-# if(hasParent)
-#     set(PROTO_LOADED "${Proto_VERSION_MAJOR}.${Proto_VERSION_MINOR}" PARENT_SCOPE)
-# endif()
+enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)  # if OFF, compilation will revert to older standard if C++17 unavailable
 set(CMAKE_CXX_EXTENSIONS OFF)  # if OFF, compilation flag uses c++17, not gnu++17
 set(CMAKE_VERBOSE_MAKEFILE ON) # if ON, prints the full compilation command when building
 
-#override compiler if desired
-#set(ENV{CC} "gcc")
-#set(ENV{CXX} "g++")
-
-# Proto options
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 set(CMAKE_POSITION_INDEPENEDENT_CODE TRUE)
+
+# # silence all compiler warnings
+# add_compile_options(-w)
+
+# Proto option variables
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(AMR "Build AMR libraries" OFF)
 option(MMB "Build MMB libraries" OFF)
 option(OPS "Build Operator libraries" OFF)
@@ -48,11 +44,12 @@ option(MEMCHECK "turns on code in BoxData that checks that copying/aliasing is w
 option(MEMTRACK "print the amount of data allocated per protoMalloc" OFF)
 option(TIMERS "whether to turn on timers" ON)
 option(DISABLE_INIT_CHECKS "Disables automatic checks for uninitialized/NAN/inf values in BoxData" OFF)
-# option(ENABLE_ROMAN "Build kernel fusion tests" OFF)
 
+# Proto cache variables
 set(VERBOSE 0 CACHE STRING "Verbosity of output")
 set(DIM 3 CACHE STRING "Dimensionality of examples")
 set(STACK 4294967296 CACHE STRING "Stack size")
+
 message(STATUS "Dimensionality: ${DIM}")
 message(STATUS "Stack size: ${STACK}")
 message(STATUS "Verbosity: ${VERBOSE}")
@@ -60,7 +57,8 @@ message(STATUS "Verbosity: ${VERBOSE}")
 add_compile_definitions(PR_VERBOSE=${VERBOSE})
 add_compile_definitions(DIM=${DIM})
 add_compile_definitions(PR_STACK_ALLOC=${STACK})
-if (NOT DEFINED CMAKE_BUILD_TYPE)
+
+if (NOT CMAKE_BUILD_TYPE)
     if (DEBUG)
         set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose build type, \
         options are: Debug Release RelWithDebInfo" FORCE)
@@ -104,18 +102,15 @@ if(NOT TIMERS)
     add_compile_definitions(PR_TURN_OFF_TIMERS)
 endif()
 
-# add_compile_options(-w)
-
 if (ENABLE_HIP)
     set(ENV{CXX} "hipcc")  # should set CMAKE_CXX_COMPILER
 endif()
-project(Proto_forall_prof VERSION 1.0 DESCRIPTION "Proto forall profiling") # LANGUAGES CXX) # HDF5 fails with LANGUAGES argument
-enable_language(CXX)
 
 # setup packages
 if(BLIS)
   set(OPS ON) # doesn't make sense to use blis without Ops
 endif()
+
 if(OPS)
     message(STATUS "Operator libraries are enabled")
     add_compile_definitions(PR_OPS)
@@ -255,52 +250,20 @@ if(ENABLE_HDF5)
     endif()
 endif()
 
-# if (NOT BLT_LOADED)
-#     if (DEFINED BLT_SOURCE_DIR)
-#         if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-#             message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
-#         endif()
-#     else ()
-#         set (BLT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/blt CACHE PATH "")
-
-#         if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-#             submodule_error("BLT")
-#         endif ()
-#     endif ()
-
-#     # Default to C++11 if not set so GTest/GMock can build
-#     if (NOT BLT_CXX_STD)
-#         set(BLT_CXX_STD "c++17" CACHE STRING "")
-#     endif()
-
-#     include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
-# endif()
-
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    if (${_variableName} MATCHES ".*_EXECUTABLE")
-        mark_as_advanced(${_variableName})
-    endif()
-endforeach()
-
-add_custom_target(dataclean COMMAND cd "${CMAKE_BINARY_DIR}/bin" 
-&& rm -rf *.vtk pout* *.hdf5 *.curve visitlog.py *.table doxygen.warn)
 
 # ----------------------
 # # setup Proto config
 # add_subdirectory(include)
+# from proto/include/CMakeLists.txt
 # ----------------------
 add_library(Headers_Base INTERFACE)
 
 target_include_directories(Headers_Base INTERFACE
-    # ${CMAKE_CURRENT_SOURCE_DIR}
-    # ${CMAKE_CURRENT_SOURCE_DIR}/base
     /global/homes/r/romanlee/Documents/codes/proto/include/
     /global/homes/r/romanlee/Documents/codes/proto/include/base/
 )
 
-# target_sources(Headers_Base INTERFACE Proto.H)
+# target_sources(Headers_Base INTERFACE Proto.H) # not necessary? Not sure where I got this line
 target_link_libraries(Headers_Base INTERFACE nvToolsExt)
 
 
@@ -408,6 +371,7 @@ target_link_libraries(Headers_Base INTERFACE nvToolsExt)
 #     message(STATUS "Kernel fusion tests are enabled")
 #     add_subdirectory(roman)
 # endif()
+# from proto/roman/CMakeLists.txt
 # ----------------------
 add_executable(forallTest forallTest.cpp)
 set_source_files_properties(forallTest.cpp PROPERTIES LANGUAGE CUDA)

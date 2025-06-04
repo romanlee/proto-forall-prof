@@ -82,7 +82,7 @@ int main(){
     PR_TIME("forall_zone");
 
     for (int i=0; i<N_ext; i++){
-      printf("HEREEEEEE\n");
+      printf("HEREEEEEE %d\n", i);
       // forall with consToPrim
       // forallInPlace<double,DIM+2,MEMTYPE_DEFAULT,1,1>(consToPrim,W,U,gamma,N_int);
       forallInPlace(consToPrim,W,U,gamma,N_int);
