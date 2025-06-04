@@ -59,11 +59,6 @@ int main(){
 
   // printf("nx=%d, N_ext=%d, N_int=%d\n", nx, N_ext, N_int);
 
-  // // TODO make these hyper params
-  // const int nx = 16;
-  // const int N_ext = 10; // Set >1 for "light kernel" test, else  set =1
-  // const int N_int = 1; // Set >1 for "heavy kernel" test, else set =1
-
 #ifdef GET_TIMINGS
   std::filesystem::path currentPath = std::filesystem::current_path();
   std::filesystem::path fullPath = currentPath / "TIMINGS.txt"; 
