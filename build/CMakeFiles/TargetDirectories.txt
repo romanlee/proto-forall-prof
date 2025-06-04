@@ -1,4 +1,0 @@
-/global/homes/r/romanlee/Documents/codes/proto-forall-prof/build/CMakeFiles/edit_cache.dir
-/global/homes/r/romanlee/Documents/codes/proto-forall-prof/build/CMakeFiles/forallTest.dir
-/global/homes/r/romanlee/Documents/codes/proto-forall-prof/build/CMakeFiles/rebuild_cache.dir
-/global/homes/r/romanlee/Documents/codes/proto-forall-prof/build/CMakeFiles/dataclean.dir
