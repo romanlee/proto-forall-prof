@@ -379,11 +379,7 @@ set_source_files_properties(forallTest.cpp PROPERTIES LANGUAGE CUDA)
 target_link_libraries(forallTest PRIVATE
     Headers_Base 
     ${LIB_DEP} 
-    nvToolsExt
-    # gtest
 )
-
-message(STATUS "LIB DEP = ${LIB_DEP}")
 
 # target_include_directories(forallTest INTERFACE 
 #     ${CMAKE_CURRENT_SOURCE_DIR}
