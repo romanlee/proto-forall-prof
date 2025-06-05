@@ -40,7 +40,7 @@ for nx in nx_vals:
                     json.dump(input, file, indent=2)
 
                 # launch simulation
-                command = 'nsys profile -o ./report-nx_{}-N_{}-{} ../../../forallTest'.format(nx, N, type)
+                command = 'nsys profile -o ./report-nx_{}-N_{}-{} ../../../forall_constoprim'.format(nx, N, type)
                 print("current dir: " + os.getcwd())
                 print("    " + command)
                 os.system(command)
