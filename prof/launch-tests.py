@@ -2,30 +2,29 @@ import os
 import sys
 import json
 
-root_dir = os.getcwd()
-
-# set the desired hyper params
-nx_vals = [16]
-N_vals = [10]
-
 # setup the runs and launch
 with open('input-template.json', 'r') as file:
     input = json.load(file)
 
+# set the desired hyper params
+nx_vals = [4,16,32,64]
+N_vals = [5,10,20,40,80,160,320,640]
+
+os.makedirs('runs/', exist_ok=True)
+os.chdir('runs/')
+root_dir = os.getcwd()
+
 for nx in nx_vals:
     input['nx'] = nx
 
-    path = 'nx_{}'.format(nx)
-    if os.path.exists('nx_{}'.format(nx)):
-        print("Directory {} exists. Exiting...".format(path))
-        sys.exit(1)
-    else:
-        for N in N_vals:
-            for type in ['heavy', 'light']:
-                # create directory
-                sim_dir = 'nx_{}/N_{}/{}/'.format(nx, N, type)
-                os.makedirs(sim_dir, exist_ok=True)
+    for N in N_vals:
+        for type in ['heavy', 'light']:
+            sim_dir = 'nx_{}/N_{}/{}/'.format(nx, N, type)
+            if os.path.isdir(sim_dir):
+                print('Directory runs/{} exists... Skipping'.format(sim_dir))
 
+            else:
+                os.makedirs(sim_dir)
                 os.chdir(sim_dir)
 
                 # write input deck to directory
@@ -40,9 +39,10 @@ for nx in nx_vals:
                     json.dump(input, file, indent=2)
 
                 # launch simulation
-                command = 'nsys profile -o ./report-nx_{}-N_{}-{} ../../../forall_constoprim'.format(nx, N, type)
+                command = 'nsys profile -o ./report-nx_{}-N_{}-{} ../../../../forall_constoprim'.format(nx, N, type)
                 print("current dir: " + os.getcwd())
-                print("    " + command)
+                print(command)
                 os.system(command)
+                print('')
 
                 os.chdir(root_dir)

@@ -2,6 +2,9 @@ import os
 import json
 import slurp_prtimerrep
 import pandas as pd
+from matplotlib import pyplot as plt
+import numpy as np
+
 
 def get_leaf_dirs(root_path):
     """
@@ -16,59 +19,69 @@ def get_leaf_dirs(root_path):
     
     return leaf_dirs
 
-# get list of all test dirs
-leaf_dirs = get_leaf_dirs('../tests')
 
-# df = pd.DataFrame(columns=['nx', 'N_ext', 'N_int', 'time'])
+def get_results(run_dir):
+    """
+    Gather profiling results into pandas dataframe
+    """
+    leaf_dirs = get_leaf_dirs(run_dir)
 
-results = []
+    results = []
 
-# add data
-for path in leaf_dirs:
-    # read hyper params from input deck
-    with open(path+'input.json', 'r') as f:
-        params = json.load(f)
+    # add data
+    for path in leaf_dirs:
+        # read hyper params from input deck
+        with open(path+'input.json', 'r') as f:
+            params = json.load(f)
 
-    # read forallzone timings
-    with open(path+'TIMINGS.txt', 'r') as f:
-        timings = f.read()
+        # read forallzone timings
+        with open(path+'TIMINGS.txt', 'r') as f:
+            timings = f.read()
+        timing_data = slurp_prtimerrep.parse_timing_report(timings)
+        forall_zone_timer = slurp_prtimerrep.find_timer_by_name(timing_data, 'forall_zone')
 
-    timing_data = slurp_prtimerrep.parse_timing_report(timings)
-    forall_zone_timer = slurp_prtimerrep.find_timer_by_name(timing_data, 'forall_zone')
+        # gather results
+        results.append({'nx'   : params['nx'], 
+                        'N_ext': params['N_ext'],
+                        'N_int': params['N_int'], 
+                        'time' : forall_zone_timer['time']})
 
-    # print(path)
-    # print('')
-
-    # print(params['N_int'])
-    # print('')
-
-    # print(f"Found {forall_zone_timer['name']}:")
-    # print(f"  Time: {forall_zone_timer['time']:.6f}s")
-    # print(f"  Percentage: {forall_zone_timer['percentage']:.1f}%")
-    # print(f"  Calls: {forall_zone_timer['count']}")
-    # print(f"  Children: {len(forall_zone_timer['children'])}")
-    # print('')
+    return pd.DataFrame(results)
 
 
+results = get_results('../runs')
+nx_vals = results['nx'].unique()
 
+plt.figure()
 
+for nx in nx_vals:
+    # plot_nx(results, nx)
 
-    # # Add rows one by one
-    # df.loc[0] = ['Alice', 25, 'NYC']
-    # df.loc[1] = ['Bob', 30, 'LA']
+    # def plot_nx(results, nx):
+    #     """
+    #     Plot light/heavy time vs N for given value of nx
+    #     """
+    # savefig = 'nx_{}.png'.format(nx)
+    # print("Plotting {}".format(savefig)) 
 
-    # Or append (less efficient for many rows)
-    # new_row = pd.DataFrame({'name': ['Charlie'], 'age': [35], 'city': ['Chicago']})
-    # new_row = pd.DataFrame({'nx': [params['nx']], 
-    #                         'N_ext': [params['N_ext']], 
-    #                         'N_int': [params['N_int']], 
-    #                         'time':[forall_zone_timer['time']]})
-    # df = pd.concat([df, new_row], ignore_index=True)
+    # pandas dataframes are great
+    heavy = results[ (results['nx'] == nx) & (results['N_ext']==1) ].sort_values('N_int')
+    light = results[ (results['nx'] == nx) & (results['N_int']==1) ].sort_values('N_ext')
 
-    results.append({'nx': params['nx'], 
-               'N_ext': params['N_ext'],
-               'N_int': params['N_int'], 
-               'time':forall_zone_timer['time']})
+    # get heavy times
+    htime_vals = heavy['time'].to_numpy()
 
-results = pd.DataFrame(results)
-print(results)
+    # get light times noramlized to heavy
+    ltime_vals = light['time'].to_numpy()
+    ltime_vals = np.divide(ltime_vals, htime_vals)
+
+    N_vals = light['N_ext'].to_numpy()
+
+    #  plot
+    plt.scatter(N_vals, ltime_vals, label='nx = {}'.format(nx))
+    plt.plot(N_vals, ltime_vals, linestyle='--')
+
+plt.legend()
+plt.xlabel('iterations N')
+plt.ylabel('light/heavy time')
+plt.savefig('nx_all.png')

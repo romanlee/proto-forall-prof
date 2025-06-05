@@ -381,8 +381,8 @@ FetchContent_MakeAvailable(json)
 # target_link_libraries(foo PRIVATE nlohmann_json::nlohmann_json)
 
 
-add_executable(forall_constoprim forall_constoprim.cpp)
-set_source_files_properties(forall_constoprim.cpp PROPERTIES LANGUAGE CUDA)
+add_executable(forall_constoprim src/forall_constoprim.cpp)
+set_source_files_properties(src/forall_constoprim.cpp PROPERTIES LANGUAGE CUDA)
 
 target_link_libraries(forall_constoprim PRIVATE
     Headers_Base 
