@@ -21,7 +21,7 @@ FetchContent_MakeAvailable(json)
 
 
 # --------------------------------------------------------------------------------------
-# Proto mess
+# Hackily include proto
 # Surely there's a better way to do this
 # --------------------------------------------------------------------------------------
 set(CMAKE_POSITION_INDEPENEDENT_CODE TRUE)
@@ -192,7 +192,7 @@ if(ENABLE_CUDA OR ENABLE_HIP)
         list(APPEND LIB_DEP cuda)
 
         # -------------
-        # WIP
+        # Not from proto, added mysefl
         # -------------
         message(STATUS "CUDA Compiler: ${CMAKE_CUDA_COMPILER}")
         message(STATUS "CUDA Compiler Version: ${CMAKE_CUDA_COMPILER_VERSION}")
@@ -200,16 +200,21 @@ if(ENABLE_CUDA OR ENABLE_HIP)
 
         # Try to get driver info
         find_program(NVIDIA_SMI nvidia-smi)
+
         if(NVIDIA_SMI)
             execute_process(
-                COMMAND ${NVIDIA_SMI} --query-gpu=driver_version,name --format=csv,noheader,nounits
-                OUTPUT_VARIABLE NVIDIA_INFO
+                COMMAND ${NVIDIA_SMI} --query-gpu=driver_version --format=csv,noheader,nounits
+                OUTPUT_VARIABLE NVIDIA_DRIVER_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE
                 ERROR_QUIET
             )
-            if(NVIDIA_INFO)
-                message(STATUS "NVIDIA Driver & GPU: ${NVIDIA_INFO}")
-            endif()
+
+            execute_process(
+                COMMAND ${NVIDIA_SMI} --query-gpu=name --format=csv,noheader,nounits
+                OUTPUT_VARIABLE NVIDIA_GPU_NAME
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
         endif()
         # -------------
 
