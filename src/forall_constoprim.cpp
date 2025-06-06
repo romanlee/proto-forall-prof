@@ -6,6 +6,7 @@
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 using namespace Proto;
 
@@ -38,7 +39,7 @@ PROTO_KERNEL_END(consToPrim_temp, consToPrim)
 
 
 void dump_run_info(int nx, int N_ext, int N_int){
-  json run_info;
+  ordered_json run_info;
 
   run_info["input params"]["nx"] = nx;
   run_info["input params"]["N_ext"] = N_ext;
@@ -51,11 +52,13 @@ void dump_run_info(int nx, int N_ext, int N_int){
   run_info["NVIDIA driver version"] = NVIDIA_DRIVER_VERSION;
   run_info["NVIDIA GPU name"] = NVIDIA_GPU_NAME;
 
+  run_info["Build type"] = CMAKE_BUILD_TYPE;
+
   std::ofstream file("run_info.json");
   if (file.is_open()) {
       file << run_info.dump(4) << std::endl; // 4 spaces for indentation
       file.close();
-      std::cout << "JSON file written successfully!" << std::endl;
+      std::cout << "run_info.json written successfully!" << std::endl;
   } else {
       std::cerr << "Error opening file for writing!" << std::endl;
   }
@@ -67,13 +70,13 @@ int main(){
   // int N_ext = 10;
   // int N_int = 1;
 
-  // read input params
-  std::ifstream f("input.json");
-  json input = json::parse(f);
+  // // read input params
+  // std::ifstream f("input.json");
+  // json input = json::parse(f);
 
-  int nx = input["nx"];
-  int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
-  int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
+  // int nx = input["nx"];
+  // int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
+  // int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
 
 #ifdef GET_TIMINGS
   std::filesystem::path currentPath = std::filesystem::current_path();

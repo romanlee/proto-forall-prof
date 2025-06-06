@@ -1,5 +1,5 @@
 # configure
-rm -r build/; cmake -B build -D ENABLE_CUDA=ON -D DEBUG=ON -D ENABLE_MPI=OFF -D VERBOSE=0 -D DIM=2
+rm -r build/; cmake -B build -D ENABLE_CUDA=ON -D DEBUG=OFF -D ENABLE_MPI=OFF -D VERBOSE=0 -D DIM=2
 
 # build
 cmake --build build/ --target forall_constoprim -j 22
