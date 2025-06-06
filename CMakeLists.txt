@@ -3,15 +3,6 @@ cmake_minimum_required(VERSION 3.20)  # uses enable_language(HIP)
 
 project(Proto_forall_prof VERSION 1.0 DESCRIPTION "Proto forall profiling") # LANGUAGES CXX) # HDF5 fails with LANGUAGES argument
 
-
-# function(submodule_error module)
-#     message(FATAL_ERROR "\
-#     The ${module} submodule is not present.\n \
-#     If in git repository run the following two commands:\n \
-#     git submodule init\n \
-#     git submodule update")
-# endfunction()
-
 enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,6 +10,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)  # if OFF, compilation will revert to older 
 set(CMAKE_CXX_EXTENSIONS OFF)  # if OFF, compilation flag uses c++17, not gnu++17
 set(CMAKE_VERBOSE_MAKEFILE ON) # if ON, prints the full compilation command when building
 
+
+# --------------------------------------------------------------------------------------
+# Json
+# --------------------------------------------------------------------------------------
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+
+# --------------------------------------------------------------------------------------
+# Proto mess
+# Surely there's a better way to do this
+# --------------------------------------------------------------------------------------
 set(CMAKE_POSITION_INDEPENEDENT_CODE TRUE)
 
 # # silence all compiler warnings
@@ -185,6 +190,30 @@ if(ENABLE_CUDA OR ENABLE_HIP)
         endif()
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --expt-extended-lambda")
         list(APPEND LIB_DEP cuda)
+
+        # -------------
+        # WIP
+        # -------------
+        message(STATUS "CUDA Compiler: ${CMAKE_CUDA_COMPILER}")
+        message(STATUS "CUDA Compiler Version: ${CMAKE_CUDA_COMPILER_VERSION}")
+        message(STATUS "CUDA Compiler ID: ${CMAKE_CUDA_COMPILER_ID}")
+
+        # Try to get driver info
+        find_program(NVIDIA_SMI nvidia-smi)
+        if(NVIDIA_SMI)
+            execute_process(
+                COMMAND ${NVIDIA_SMI} --query-gpu=driver_version,name --format=csv,noheader,nounits
+                OUTPUT_VARIABLE NVIDIA_INFO
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
+            if(NVIDIA_INFO)
+                message(STATUS "NVIDIA Driver & GPU: ${NVIDIA_INFO}")
+            endif()
+        endif()
+        # -------------
+
+
     endif()
 endif()
 
@@ -251,11 +280,10 @@ if(ENABLE_HDF5)
 endif()
 
 
-# ----------------------
-# # setup Proto config
+# -----------------
 # add_subdirectory(include)
 # from proto/include/CMakeLists.txt
-# ----------------------
+# -----------------
 add_library(Headers_Base INTERFACE)
 
 target_include_directories(Headers_Base INTERFACE
@@ -352,7 +380,6 @@ target_link_libraries(Headers_Base INTERFACE nvToolsExt)
 # elseif(ENABLE_HDF5)
 #   target_link_libraries(Headers_Base INTERFACE HDF5::HDF5)
 # endif()
-# ----------------------
 
 # if(ENABLE_EXAMPLES)
 #     add_subdirectory(examples)
@@ -367,30 +394,39 @@ target_link_libraries(Headers_Base INTERFACE nvToolsExt)
 # endif()
 
 # ----------------------
-# if(ENABLE_ROMAN)
-#     message(STATUS "Kernel fusion tests are enabled")
-#     add_subdirectory(roman)
-# endif()
-# from proto/roman/CMakeLists.txt
-# ----------------------
-include(FetchContent)
-
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
-FetchContent_MakeAvailable(json)
-
-# target_link_libraries(foo PRIVATE nlohmann_json::nlohmann_json)
 
 
-add_executable(forall_constoprim src/forall_constoprim.cpp)
-set_source_files_properties(src/forall_constoprim.cpp PROPERTIES LANGUAGE CUDA)
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+find_package(Git QUIET)
 
-target_link_libraries(forall_constoprim PRIVATE
-    Headers_Base 
-    ${LIB_DEP} 
-    nlohmann_json::nlohmann_json
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_BRANCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_DESCRIBE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+    set(GIT_BRANCH "unknown")
+    set(GIT_DESCRIBE "unknown")
+endif()
+
+# Configure a header file
+configure_file(
+    "${CMAKE_SOURCE_DIR}/version.h.in"
+    "${CMAKE_BINARY_DIR}/version.h"
+    @ONLY
 )
 
-# target_include_directories(forall_constoprim INTERFACE 
-#     ${CMAKE_CURRENT_SOURCE_DIR}
-# )
-# ----------------------
+
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+add_subdirectory(src)

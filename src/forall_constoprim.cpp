@@ -1,6 +1,6 @@
-// modified from tests/ForallTests.cpp
-// #include <gtest/gtest.h>
+// modified from proto/tests/ForallTests.cpp
 #include "Proto.H"
+#include "version.h"
 #include <filesystem>
 #include <fstream>
 
@@ -9,19 +9,8 @@ using json = nlohmann::json;
 
 using namespace Proto;
 
-#define NUMCOMPS DIM+2
 #define GET_TIMINGS 1
 
-
-PROTO_KERNEL_START
-void f_threshold_temp( Var<short>& a_tags,
-             Var<double, NUMCOMPS>& a_U)
-{
-  double thresh = 1.001;
-  if (a_U(0) > thresh) {a_tags(0) = 1;}
-  else {a_tags(0) = 0;};
-};
-PROTO_KERNEL_END(f_threshold_temp, f_threshold);
 
 PROTO_KERNEL_START
 void consToPrim_temp(Var<double,DIM+2>& W, 
@@ -47,17 +36,26 @@ void consToPrim_temp(Var<double,DIM+2>& W,
 }
 PROTO_KERNEL_END(consToPrim_temp, consToPrim)
 
-int main(){
 
-  // read input params
-  std::ifstream f("input.json");
-  json input = json::parse(f);
-
-  int nx = input["nx"];
-  int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
-  int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
-
+void dump_run_info(){
   // printf("nx=%d, N_ext=%d, N_int=%d\n", nx, N_ext, N_int);
+  std::cout << "Git describe: " << GIT_DESCRIBE << std::endl;
+  std::cout << "Git branch: " << GIT_BRANCH << std::endl;
+}
+
+
+int main(){
+  // // read input params
+  // std::ifstream f("input.json");
+  // json input = json::parse(f);
+
+  // int nx = input["nx"];
+  // int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
+  // int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
+
+  int nx = 16;
+  int N_ext = 10;
+  int N_int = 1;
 
 #ifdef GET_TIMINGS
   std::filesystem::path currentPath = std::filesystem::current_path();
@@ -96,6 +94,8 @@ int main(){
   // Screws up Nsight systems (except when...the PR_TIMER_SETFILE is in the same dir as the .nsys-rep???)
   PR_TIMER_REPORT();
 #endif
+
+  dump_run_info();
 
   return 0;
 }
