@@ -193,12 +193,8 @@ if(ENABLE_CUDA OR ENABLE_HIP)
 
         # -------------
         # Not from proto, added mysefl
+        # try to get driver info
         # -------------
-        message(STATUS "CUDA Compiler: ${CMAKE_CUDA_COMPILER}")
-        message(STATUS "CUDA Compiler Version: ${CMAKE_CUDA_COMPILER_VERSION}")
-        message(STATUS "CUDA Compiler ID: ${CMAKE_CUDA_COMPILER_ID}")
-
-        # Try to get driver info
         find_program(NVIDIA_SMI nvidia-smi)
 
         if(NVIDIA_SMI)
