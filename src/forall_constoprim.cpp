@@ -70,13 +70,13 @@ int main(){
   // int N_ext = 10;
   // int N_int = 1;
 
-  // // read input params
-  // std::ifstream f("input.json");
-  // json input = json::parse(f);
+  // read input params
+  std::ifstream f("input.json");
+  json input = json::parse(f);
 
-  // int nx = input["nx"];
-  // int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
-  // int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
+  int nx = input["nx"];
+  int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
+  int N_int = input["N_int"]; // Set >1 for "heavy kernel" test, else set =1
 
 #ifdef GET_TIMINGS
   std::filesystem::path currentPath = std::filesystem::current_path();
