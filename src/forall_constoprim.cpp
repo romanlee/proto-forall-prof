@@ -45,14 +45,15 @@ void dump_run_info(int nx, int N_ext, int N_int){
   run_info["input params"]["N_ext"] = N_ext;
   run_info["input params"]["N_int"] = N_int;
 
+  run_info["DIM"] = DIM;
+  run_info["Build type"] = CMAKE_BUILD_TYPE;
+
   run_info["Git describe"] = GIT_DESCRIBE;
   run_info["Git branch"] = GIT_BRANCH;
 
   run_info["CUDA compiler version"] = CMAKE_CUDA_COMPILER_VERSION;
   run_info["NVIDIA driver version"] = NVIDIA_DRIVER_VERSION;
   run_info["NVIDIA GPU name"] = NVIDIA_GPU_NAME;
-
-  run_info["Build type"] = CMAKE_BUILD_TYPE;
 
   std::ofstream file("run_info.json");
   if (file.is_open()) {
@@ -65,14 +66,46 @@ void dump_run_info(int nx, int N_ext, int N_int){
 }
 
 
-int main(){
-  // int nx = 16;
-  // int N_ext = 10;
-  // int N_int = 1;
+int main(int argc, char* argv[]){
+
+  // Default input filename
+  std::string input_filename = "input.json";
+  
+  // Check if input filename is provided as command line argument
+  if (argc > 1) {
+    input_filename = argv[1];
+  }
 
   // read input params
-  std::ifstream f("input.json");
-  json input = json::parse(f);
+  std::ifstream f(input_filename);
+  
+  // Check if file exists and can be opened
+  if (!f.is_open()) {
+    std::cerr << "Error: Could not open input file '" << input_filename << "'" << std::endl;
+    std::cerr << "Please check that the file exists and is readable." << std::endl;
+    return 1;
+  }
+
+  json input;
+  try {
+    input = json::parse(f);
+  } catch (const json::parse_error& e) {
+    std::cerr << "Error: Failed to parse JSON from file '" << input_filename << "'" << std::endl;
+    std::cerr << "Parse error: " << e.what() << std::endl;
+    f.close();
+    return 1;
+  }
+  
+  f.close();
+
+// int main(){
+//   // int nx = 16;
+//   // int N_ext = 10;
+//   // int N_int = 1;
+
+//   // read input params
+//   std::ifstream f("input.json");
+//   json input = json::parse(f);
 
   int nx = input["nx"];
   int N_ext = input["N_ext"]; // Set >1 for "light kernel" test, else  set =1
@@ -114,6 +147,8 @@ int main(){
 #endif
 
   dump_run_info(nx, N_ext, N_int);
+
+  std::cout << "Done!" << std::endl;
 
   return 0;
 }
